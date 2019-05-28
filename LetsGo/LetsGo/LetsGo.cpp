@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <math.h>
 
 using namespace std;
 
@@ -73,31 +74,55 @@ private:
 		}
 	}
 
+	// Returns True if (x1, y1) is closer to (x3, y3) than (x2, y2) is.
+	bool IsCloserToOrig(int x1, int y1, int x2, int y2, int x3, int y3)
+	{
+		double sqr1 = pow((x1 - x3), 2.0);
+		double sqr2 = pow((y1 - y3), 2.0);
+		double sqr3 = pow((x2 - x3), 2.0);
+		double sqr4 = pow((y2 - y3), 2.0);
 
+		return (sqr1 + sqr2) < (sqr3 + sqr4);
+	}
 
-	void ExertInfluence(int cur_x, int cur_y, int orig_x, int orig_y, int cur_inf, char stone)
+	void ExertInfluence(int cur_x, int cur_y, int prev_x, int prev_y, int orig_x, int orig_y, int cur_inf, char stone)
 	{
 		string mylastVis = ToLastVisitor(orig_x, orig_y);
 
 		if ((cur_inf > 0) &&
 			(MyBoard[cur_x][cur_y].last_visitor.compare(mylastVis) != 0) &&
-			(MyBoard[cur_x][cur_y].stone == EMPTY) || (cur_x == orig_x && cur_y == orig_y))
+			((MyBoard[cur_x][cur_y].stone == EMPTY) || (cur_x == orig_x && cur_y == orig_y)) &&
+			(!(IsCloserToOrig(cur_x, cur_y, prev_x, prev_y, orig_x, orig_y)))
+		   )
 		{
+			//cin.get();
+			//cout << "exploring space " << cur_x << " " << cur_y << " with LV " << MyBoard[cur_x][cur_y].last_visitor << " and actual orig " << mylastVis;
 			if (stone == BLACK)
 			{
+				//cin.get();
+				//cout << "influencing space " << cur_x << " " << cur_y << " by " << cur_inf << endl;
 				MyBoard[cur_x][cur_y].black_score += cur_inf;
 			}
 			else if (stone == WHITE)
 			{
 				MyBoard[cur_x][cur_y].white_score += cur_inf;
 			}
+			//else
+			//{
+			//	cout << "not influencing space " << cur_x << " " << cur_y << endl;
+			//}
 			MyBoard[cur_x][cur_y].last_visitor = ToLastVisitor(orig_x, orig_y);
 
-			ExertInfluence(cur_x + 1, cur_y, orig_x, orig_y, cur_inf - 1, stone);
-			ExertInfluence(cur_x - 1, cur_y, orig_x, orig_y, cur_inf - 1, stone);
-			ExertInfluence(cur_x, cur_y - 1, orig_x, orig_y, cur_inf - 1, stone);
-			ExertInfluence(cur_x, cur_y + 1, orig_x, orig_y, cur_inf - 1, stone);
+			//cout << "recurring north" << endl;
+			ExertInfluence(cur_x + 1, cur_y, cur_x, cur_y, orig_x, orig_y, cur_inf - 1, stone);
+			//cout << "recurring south" << endl;
+			ExertInfluence(cur_x - 1, cur_y, cur_x, cur_y, orig_x, orig_y, cur_inf - 1, stone);
+			//cout << "recurring east" << endl;
+			ExertInfluence(cur_x, cur_y - 1, cur_x, cur_y, orig_x, orig_y, cur_inf - 1, stone);
+			//cout << "recurring west" << endl;
+			ExertInfluence(cur_x, cur_y + 1, cur_x, cur_y, orig_x, orig_y, cur_inf - 1, stone);
 		}
+		//cout << "returning >>> ";
 		return;
 	}
 	 
@@ -165,7 +190,7 @@ public:
 		cout << endl;
 	}
 
-	void PrintScores()
+	void PrintBlackScores()
 	{
 		for (unsigned int x = 0; x < BoardSize; x++)
 		{
@@ -174,6 +199,26 @@ public:
 				if (MyBoard[x][y].stone != EDGE)
 				{
 					cout << MyBoard[x][y].black_score << "   ";
+				}
+				else
+				{
+					cout << EDGE << "   ";
+				}
+			}
+			cout << endl;
+		}
+		cout << endl;
+	}
+
+	void PrintWhiteScores()
+	{
+		for (unsigned int x = 0; x < BoardSize; x++)
+		{
+			for (unsigned int y = 0; y < BoardSize; y++)
+			{
+				if (MyBoard[x][y].stone != EDGE)
+				{
+					cout << MyBoard[x][y].white_score << "   ";
 				}
 				else
 				{
@@ -209,6 +254,7 @@ public:
 			{
 				MyBoard[x][y].white_score = 0;
 				MyBoard[x][y].black_score = 0;
+				MyBoard[x][y].last_visitor.clear();
 			}
 		}
 		for (unsigned int x = 1; x < BoardSize - 1; x++)
@@ -217,11 +263,11 @@ public:
 			{
 				if (MyBoard[x][y].stone == BLACK)
 				{
-					ExertInfluence(x, y, x, y, BoardSize - 2, BLACK);
+					ExertInfluence(x, y, x, y, x, y, BoardSize / 2, BLACK);
 				}
 				else if (MyBoard[x][y].stone == WHITE)
 				{
-					ExertInfluence(x, y, x, y, BoardSize - 2, WHITE);
+					ExertInfluence(x, y, x, y, x, y, BoardSize / 2, WHITE);
 				}
 			}
 		}
@@ -262,9 +308,9 @@ int main()
 
 	while (!done)
 	{
-		cout << endl << "Enter the x-coordinate of your move: ";
+		cout << endl << "Enter the x-coordinate of your move for black: ";
 		cin >> input_x;
-		cout << "Enter the y-coordinate of your move: ";
+		cout << "Enter the y-coordinate of your move black: ";
 		cin >> input_y;
 
 		if (!MyGoBoard.PlaceStone(input_x, input_y, BLACK))
@@ -272,15 +318,30 @@ int main()
 			cout << "That is an illegal move... no stone placed." << endl;
 		}
 
-		cout << endl;		
+		cout << endl;
+		MyGoBoard.PrintBoard();
+		MyGoBoard.CalculateInfluence();
 		MyGoBoard.PrintInfluence();
+
+		cout << endl << "Enter the x-coordinate of your move for white: ";
+		cin >> input_x;
+		cout << "Enter the y-coordinate of your move white: ";
+		cin >> input_y;
+		cin.ignore();
+
+		if (!MyGoBoard.PlaceStone(input_x, input_y, WHITE))
+		{
+			cout << "That is an illegal move... no stone placed." << endl;
+		}
+
+		cout << endl;
 		MyGoBoard.PrintBoard();
 		MyGoBoard.CalculateInfluence();
 		MyGoBoard.PrintInfluence();
 
 		cout << "Would you like to keep playing? y/n : ";
 		cin >> input_char;
-
+		cin.ignore();
 		if (input_char == 'n' || input_char == 'N')
 		{
 			done = true;
