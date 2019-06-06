@@ -6,6 +6,8 @@
 #include <string>
 #include <sstream>
 #include <math.h>
+#include <algorithm>
+#include <vector>
 
 using namespace std;
 
@@ -36,10 +38,102 @@ struct BoardSpace
 	}
 };
 
+struct TestMove
+{
+	int x;
+	int y;
+	int score;
+
+	TestMove()
+	{
+		int x = -1;
+		int y = -1;
+		int score = -1;
+	}
+};
+
 class GoBoard
 {
 
 private:
+
+	void RemoveCapturedStone(char newStone)
+	{
+		for (unsigned int x = 1; x < BoardSize - 1; x++)
+		{
+			for (unsigned int y = 1; y < BoardSize - 1; y++)
+			{
+				if ((MyBoard[x][y].stone != EMPTY) && (MyBoard[x][y].stone != newStone))
+				{
+					if (MyBoard[x + 1][y].stone == newStone &&
+						MyBoard[x - 1][y].stone == newStone &&
+						MyBoard[x][y + 1].stone == newStone &&
+						MyBoard[x][y - 1].stone == newStone)
+					{
+						MyBoard[x][y].stone = EMPTY;
+					}
+				}
+			}
+		}
+	}
+
+	void TestRemoveCapturedStone(char newStone)
+	{
+		for (unsigned int x = 1; x < BoardSize - 1; x++)
+		{
+			for (unsigned int y = 1; y < BoardSize - 1; y++)
+			{
+				if ((MyBoard[x][y].stone != EMPTY) && (MyBoard[x][y].stone != newStone))
+				{
+					if (MyBoard[x + 1][y].stone == newStone &&
+						MyBoard[x - 1][y].stone == newStone &&
+						MyBoard[x][y + 1].stone == newStone &&
+						MyBoard[x][y - 1].stone == newStone)
+					{
+						MyBoard[x][y].stone = EMPTY;
+						CalculateInfluence();
+						MyBoard[x][y].stone = BLACK;
+					}
+				}
+			}
+		}
+	}
+
+	static bool compareTestMoves(TestMove a, TestMove b)
+	{
+		return (a.score > b.score);
+	}
+	
+	void TakeAITurn()
+	{		
+		vector<TestMove> possibleMoves;
+		TestMove tempMove;
+
+		for (unsigned int x = 1; x < BoardSize - 1; x++)
+		{
+			for (unsigned int y = 1; y < BoardSize - 1; y++)
+			{
+				if (MyBoard[x][y].stone != EMPTY)
+				{
+					PlaceStone(x, y, WHITE, true);
+
+					tempMove.score = total_white_score;
+					tempMove.x = x;
+					tempMove.y = y;
+
+					possibleMoves.push_back(tempMove);
+
+					MyBoard[x][y].stone = EMPTY;
+				}
+			}
+		}
+
+		sort(possibleMoves.begin(), possibleMoves.end(), &compareTestMoves);
+
+		tempMove = possibleMoves[0];
+
+		PlaceStone(tempMove.x, tempMove.y, WHITE, false);
+	}
 
 	string ToLastVisitor(int x, int y)
 	{
@@ -230,16 +324,41 @@ public:
 		cout << endl;
 	}
 
-	bool PlaceStone(int x, int y, char newStone)
+	bool TakePlayerTurn(int x, int y, char newStone, bool is_test)
+	{
+		bool legalMove = PlaceStone(x, y, newStone, is_test);
+		CalculateInfluence();
+		PrintInfluence();
+		cin.get();
+
+		TakeAITurn();
+		CalculateInfluence();
+		PrintInfluence();
+		cin.get();
+
+		return legalMove;
+	}
+
+	bool PlaceStone(int x, int y, char newStone, bool is_test)
 	{
 		if (MyBoard[x][y].stone == EMPTY)
 		{
 			MyBoard[x][y].stone = newStone;
+
+			if (is_test)
+			{
+				TestRemoveCapturedStone(newStone);
+			}
+			else
+			{
+				RemoveCapturedStone(newStone);
+			}
 		}
 		else
 		{
 			return false;
 		}
+
 		return true;
 	}
 
@@ -313,31 +432,27 @@ int main()
 		cout << "Enter the y-coordinate of your move black: ";
 		cin >> input_y;
 
-		if (!MyGoBoard.PlaceStone(input_x, input_y, BLACK))
+		if (!MyGoBoard.PlaceStone(input_x, input_y, BLACK, false))
 		{
 			cout << "That is an illegal move... no stone placed." << endl;
 		}
 
 		cout << endl;
 		MyGoBoard.PrintBoard();
-		MyGoBoard.CalculateInfluence();
-		MyGoBoard.PrintInfluence();
 
-		cout << endl << "Enter the x-coordinate of your move for white: ";
-		cin >> input_x;
-		cout << "Enter the y-coordinate of your move white: ";
-		cin >> input_y;
-		cin.ignore();
+		//cout << endl << "Enter the x-coordinate of your move for white: ";
+		//cin >> input_x;
+		//cout << "Enter the y-coordinate of your move white: ";
+		//cin >> input_y;
+		//cin.ignore();
 
-		if (!MyGoBoard.PlaceStone(input_x, input_y, WHITE))
-		{
-			cout << "That is an illegal move... no stone placed." << endl;
-		}
+		//if (!MyGoBoard.PlaceStone(input_x, input_y, WHITE))
+		//{
+		//	cout << "That is an illegal move... no stone placed." << endl;
+		//}
 
 		cout << endl;
 		MyGoBoard.PrintBoard();
-		MyGoBoard.CalculateInfluence();
-		MyGoBoard.PrintInfluence();
 
 		cout << "Would you like to keep playing? y/n : ";
 		cin >> input_char;
