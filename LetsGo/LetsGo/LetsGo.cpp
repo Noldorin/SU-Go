@@ -79,6 +79,9 @@ private:
 
 	void TestRemoveCapturedStone(char newStone)
 	{
+		int x_removed = -1;
+		int y_removed = -1;
+
 		for (unsigned int x = 1; x < BoardSize - 1; x++)
 		{
 			for (unsigned int y = 1; y < BoardSize - 1; y++)
@@ -91,11 +94,18 @@ private:
 						MyBoard[x][y - 1].stone == newStone)
 					{
 						MyBoard[x][y].stone = EMPTY;
-						CalculateInfluence();
-						MyBoard[x][y].stone = BLACK;
+						x_removed = x;
+						y_removed = y;
 					}
 				}
 			}
+		}
+
+		CalculateInfluence();
+
+		if (x_removed > 0)
+		{
+			MyBoard[x_removed][y_removed].stone = EMPTY;
 		}
 	}
 
@@ -113,7 +123,7 @@ private:
 		{
 			for (unsigned int y = 1; y < BoardSize - 1; y++)
 			{
-				if (MyBoard[x][y].stone != EMPTY)
+				if (MyBoard[x][y].stone == EMPTY)
 				{
 					PlaceStone(x, y, WHITE, true);
 
@@ -399,10 +409,12 @@ public:
 					if (MyBoard[x][y].white_score < MyBoard[x][y].black_score)
 					{
 						MyBoard[x][y].owner = BLACK;
+						total_black_score++;
 					}
 					else if (MyBoard[x][y].white_score > MyBoard[x][y].black_score)
 					{
 						MyBoard[x][y].owner = WHITE;
+						total_white_score++;
 					}
 					else
 					{
@@ -432,7 +444,7 @@ int main()
 		cout << "Enter the y-coordinate of your move black: ";
 		cin >> input_y;
 
-		if (!MyGoBoard.PlaceStone(input_x, input_y, BLACK, false))
+		if (!MyGoBoard.TakePlayerTurn(input_x, input_y, BLACK, false))
 		{
 			cout << "That is an illegal move... no stone placed." << endl;
 		}
