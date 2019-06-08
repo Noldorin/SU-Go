@@ -1,5 +1,5 @@
-// LetsGo.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+// LetsGo.cpp : This file contains the 'main' function.
+// Program execution begins and ends there.
 
 #include "pch.h"
 #include <iostream>
@@ -113,9 +113,9 @@ private:
 	{
 		return (a.score > b.score);
 	}
-	
+
 	void TakeAITurn()
-	{		
+	{
 		vector<TestMove> possibleMoves;
 		TestMove tempMove;
 
@@ -178,7 +178,6 @@ private:
 		}
 	}
 
-	// Returns True if (x1, y1) is closer to (x3, y3) than (x2, y2) is.
 	bool IsCloserToOrig(int x1, int y1, int x2, int y2, int x3, int y3)
 	{
 		double sqr1 = pow((x1 - x3), 2.0);
@@ -199,37 +198,25 @@ private:
 			(!(IsCloserToOrig(cur_x, cur_y, prev_x, prev_y, orig_x, orig_y)))
 		   )
 		{
-			//cin.get();
-			//cout << "exploring space " << cur_x << " " << cur_y << " with LV " << MyBoard[cur_x][cur_y].last_visitor << " and actual orig " << mylastVis;
 			if (stone == BLACK)
 			{
-				//cin.get();
-				//cout << "influencing space " << cur_x << " " << cur_y << " by " << cur_inf << endl;
 				MyBoard[cur_x][cur_y].black_score += cur_inf;
 			}
 			else if (stone == WHITE)
 			{
 				MyBoard[cur_x][cur_y].white_score += cur_inf;
 			}
-			//else
-			//{
-			//	cout << "not influencing space " << cur_x << " " << cur_y << endl;
-			//}
+
 			MyBoard[cur_x][cur_y].last_visitor = ToLastVisitor(orig_x, orig_y);
 
-			//cout << "recurring north" << endl;
 			ExertInfluence(cur_x + 1, cur_y, cur_x, cur_y, orig_x, orig_y, cur_inf - 1, stone);
-			//cout << "recurring south" << endl;
 			ExertInfluence(cur_x - 1, cur_y, cur_x, cur_y, orig_x, orig_y, cur_inf - 1, stone);
-			//cout << "recurring east" << endl;
 			ExertInfluence(cur_x, cur_y - 1, cur_x, cur_y, orig_x, orig_y, cur_inf - 1, stone);
-			//cout << "recurring west" << endl;
 			ExertInfluence(cur_x, cur_y + 1, cur_x, cur_y, orig_x, orig_y, cur_inf - 1, stone);
 		}
-		//cout << "returning >>> ";
 		return;
 	}
-	 
+
 public:
 
 	unsigned int BoardSize;
@@ -257,7 +244,6 @@ public:
 		{
 			delete [] MyBoard[x];
 		}
-
 		delete [] MyBoard;
 	}
 
@@ -336,15 +322,27 @@ public:
 
 	bool TakePlayerTurn(int x, int y, char newStone, bool is_test)
 	{
+		cout << endl;
 		bool legalMove = PlaceStone(x, y, newStone, is_test);
-		CalculateInfluence();
-		PrintInfluence();
-		cin.get();
 
-		TakeAITurn();
+		// UNCOMMENT TO SEE PLAYER INFLUENCE:
+		/*
+		cout << "Your influence: " << endl;
+		cout << "----------------------" << endl;
 		CalculateInfluence();
 		PrintInfluence();
-		cin.get();
+		cout << endl;
+		*/
+
+		// UNCOMMENT TO SEE AGENT INFLUENCE BASED ON YOURS:
+		TakeAITurn();
+		/*
+		cout << "Opponent's influence: " << endl;
+		cout << "----------------------" << endl;
+		CalculateInfluence();
+		PrintInfluence();
+		cout << endl;
+		*/
 
 		return legalMove;
 	}
@@ -427,6 +425,23 @@ public:
 };
 
 
+void intro(){
+	cout << endl;
+	cout << "Hello, player. Here, you will be playing a game of GO." << endl;
+	cout << endl;
+	cout << "Notes: " << endl;
+	cout << "---------------" << endl;
+	cout << "➤ Player (you) are denoted by 'o' on the board." << endl;
+	cout << "➤ The agent is denoted by 'x' on the board." << endl;
+	cout << "➤ A move consists of an (x,y) coordinate." << endl;
+	cout << "➤ The objective is to gain as much board space as you can against "
+		<< "the agent." << endl;
+	cout << "➤ By default, the game will simply show you where the pieces are being placed. If " << endl;
+	cout << "you would like to see how the agent is making its decisions please see instructions in the code." << endl;
+	cout << "➤ Like in real Go, you may quit anytime you wish." << endl;
+	cout << endl;
+}
+
 int main()
 {
 	GoBoard MyGoBoard(9);
@@ -434,46 +449,30 @@ int main()
 	char input_char;
 	int input_x, input_y;
 
-
+	// Start with empty board:
+	intro();
 	MyGoBoard.PrintBoard();
 
 	while (!done)
 	{
-		cout << endl << "Enter the x-coordinate of your move for black: ";
+		cout << "Enter x-coordinate: ";
 		cin >> input_x;
-		cout << "Enter the y-coordinate of your move black: ";
+		cout << "Enter the y-coordinate: ";
 		cin >> input_y;
 
 		if (!MyGoBoard.TakePlayerTurn(input_x, input_y, BLACK, false))
-		{
 			cout << "That is an illegal move... no stone placed." << endl;
-		}
-
 		cout << endl;
+
+		// Update board with new moves, displays pieces being placed
+		// by default, see TakePlayerTurn for details:
 		MyGoBoard.PrintBoard();
 
-		//cout << endl << "Enter the x-coordinate of your move for white: ";
-		//cin >> input_x;
-		//cout << "Enter the y-coordinate of your move white: ";
-		//cin >> input_y;
-		//cin.ignore();
-
-		//if (!MyGoBoard.PlaceStone(input_x, input_y, WHITE))
-		//{
-		//	cout << "That is an illegal move... no stone placed." << endl;
-		//}
-
-		cout << endl;
-		MyGoBoard.PrintBoard();
-
-		cout << "Would you like to keep playing? y/n : ";
+		cout << "Would you like to keep playing (y/n): ";
 		cin >> input_char;
-		cin.ignore();
 		if (input_char == 'n' || input_char == 'N')
-		{
 			done = true;
-		}
+		cout << endl;
 	}
-
 	return 0;
 }
