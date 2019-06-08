@@ -95,10 +95,10 @@ private:
 			{
 				if ((MyBoard[x][y].stone != EMPTY) && (MyBoard[x][y].stone != newStone))
 				{
-					if (MyBoard[x + 1][y].stone == newStone &&
-						MyBoard[x - 1][y].stone == newStone &&
-						MyBoard[x][y + 1].stone == newStone &&
-						MyBoard[x][y - 1].stone == newStone)
+					if (((MyBoard[x + 1][y].stone == newStone) || (MyBoard[x + 1][y].stone == EDGE)) &&
+						((MyBoard[x - 1][y].stone == newStone) || (MyBoard[x - 1][y].stone == EDGE)) &&
+						((MyBoard[x][y + 1].stone == newStone) || (MyBoard[x][y + 1].stone == EDGE)) &&
+						((MyBoard[x][y - 1].stone == newStone) || (MyBoard[x][y - 1].stone == EDGE)))
 					{
 						MyBoard[x][y].stone = EMPTY;
 					}
@@ -122,10 +122,10 @@ private:
 			{
 				if ((MyBoard[x][y].stone != EMPTY) && (MyBoard[x][y].stone != newStone))
 				{
-					if (MyBoard[x + 1][y].stone == newStone &&
-						MyBoard[x - 1][y].stone == newStone &&
-						MyBoard[x][y + 1].stone == newStone &&
-						MyBoard[x][y - 1].stone == newStone)
+					if (((MyBoard[x + 1][y].stone == newStone) || (MyBoard[x + 1][y].stone == EDGE)) &&
+						((MyBoard[x - 1][y].stone == newStone) || (MyBoard[x - 1][y].stone == EDGE)) &&
+						((MyBoard[x][y + 1].stone == newStone) || (MyBoard[x][y + 1].stone == EDGE)) &&
+						((MyBoard[x][y - 1].stone == newStone) || (MyBoard[x][y - 1].stone == EDGE)))
 					{
 						MyBoard[x][y].stone = EMPTY;
 						x_removed = x;
@@ -140,7 +140,7 @@ private:
 		// If a stone was removed... un-remove it
 		if (x_removed > 0)
 		{
-			MyBoard[x_removed][y_removed].stone = EMPTY;
+			MyBoard[x_removed][y_removed].stone = BLACK;
 		}
 	}
 
